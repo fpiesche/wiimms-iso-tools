@@ -22,12 +22,18 @@ on:  # yamllint disable-line rule:truthy
       - published
 
 env:
-  PLATFORMS: linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64
   RELEASE: ${{ github.event.action }} == "release" || startsWith(github.ref, 'refs/tags/')
 
 jobs:
-  build-wit:
+  build-linux:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - linux/arm/v6
+          - linux/arm/v7
+          - linux/arm64/v8
+          - linux/amd64
 
     steps:
       - uses: actions/checkout@v3
@@ -44,16 +50,58 @@ jobs:
           file: Dockerfile
           push: false
           outputs: type=tar,dest=artifacts
-          platforms: ${{ env.PLATFORMS }}
+          platforms: ${{ matrix.platform }}
 
       - name: Publish build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: wit
-          path: artifacts/
+          name: wit ${{ matrix.platform }}
+          path: artifacts/*
 
       - name: Attach build artifacts to release
         if: ${{ env.RELEASE }}
         uses: softprops/action-gh-release@v1
         with:
           files: artifacts/*
+
+  build-mac:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build wit
+        run: make -C project distrib
+
+      - name: Publish build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wit mac
+          path: project/latest-mac.tar.gz
+
+      - name: Attach build artifacts to release
+        if: ${{ env.RELEASE }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: project/latest-mac.tar.gz
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build wit
+        run: make -C project distrib
+
+      - name: Publish build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wit windows
+          path: project/latest-win.tar.gz
+
+      - name: Attach build artifacts to release
+        if: ${{ env.RELEASE }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: project/latest-win.tar.gz
