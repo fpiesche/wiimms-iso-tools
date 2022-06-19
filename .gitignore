@@ -14,3 +14,4 @@ project/logo.inc
 project/templates.sed
 project/ui-head.inc
 project/version.h
+artifacts/**
