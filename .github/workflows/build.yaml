@@ -25,7 +25,6 @@ env:
   PLATFORMS: linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/amd64
   RELEASE: ${{ github.event.action }} == "release" || startsWith(github.ref, 'refs/tags/')
 
-
 jobs:
   build-wit:
     runs-on: ubuntu-latest
@@ -46,6 +45,12 @@ jobs:
           push: false
           outputs: type=tar,dest=artifacts
           platforms: ${{ env.PLATFORMS }}
+
+      - name: Publish build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wit
+          path: artifacts/
 
       - name: Attach build artifacts to release
         if: ${{ env.RELEASE }}
